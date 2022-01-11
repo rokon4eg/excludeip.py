@@ -78,8 +78,9 @@ Count:{len(eoipIPlist)}
             print("\n".join(eoipIPlist))
     elif len(sys.argv) == 3:
         iplist = compareIPlist(getipfromfile(filebase, regExFindIP), subiplist)
-        print('IP addresses from file: "{}" exclude ip in file: "{}"'.format(filebase, subfile), '\nCount:',
-              len(iplist))
+        print(f'IP addresses from file: "{filebase}"',
+              f'Excluding IP containsed in "{subfile}"',
+              f'Count: {len(iplist)}', sep='\n')
         print("\n".join(iplist))
     else:
         print(description)
