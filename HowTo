@@ -1,0 +1,5 @@
+export compact file=export_compact.txt
+ppp active pr file=ppp_active_from_cm
+ppp secret pr file=ppp_secret_from_cm
+interface eoip pr file=eoip
+ip add pr file=ip_addr_from_cm
