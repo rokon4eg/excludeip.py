@@ -18,10 +18,10 @@ def getipfromfile(filename, regex):
 # если isinclude = True, то возвращаем список IP содержащийся в обеих списках
 # если isinclude = False, то возвращаем список IP содержащийся в ipListMain, и не вхоящий в subipList
 def compareIPlist(iplistmain, subiplist, isinclude=False):
-    res = []
+    res = set()
     for ip in iplistmain:
         if not (ip in subiplist):
-            res.append(ip)
+            res.add(ip)
     return res
 
 
