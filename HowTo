@@ -6,3 +6,4 @@ ip add pr file=ip_addr_from_cm
 
 interface bridge print file=bridge
 interface bridge port pr file=br_port detail
+ip address pr file=ip_addr detail 
