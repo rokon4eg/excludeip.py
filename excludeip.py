@@ -71,7 +71,7 @@ if __name__ == '__main__':
             eoipIPlist = compareIPlist(getipfromfile(filebase, regExFindEOIP), subiplist, eoip_param.get(eoip_arg)[0])
             print(f'''
 Checked {eoip_param.get(eoip_arg)[1]} IP addresses from EOIP in "{filebase}" 
-Excluding IP containsed in "{subfile}"
+Excluding IP contained in "{subfile}"
 Return Remote IP address list from EOIP tunnel.
 Count:{len(eoipIPlist)}
 ''')
@@ -79,7 +79,7 @@ Count:{len(eoipIPlist)}
     elif len(sys.argv) == 3:
         iplist = compareIPlist(getipfromfile(filebase, regExFindIP), subiplist)
         print(f'IP addresses from file: "{filebase}"',
-              f'Excluding IP containsed in "{subfile}"',
+              f'Excluding IP contained in "{subfile}"',
               f'Count: {len(iplist)}', sep='\n')
         print("\n".join(iplist))
     else:
