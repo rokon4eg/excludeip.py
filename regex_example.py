@@ -1,4 +1,6 @@
 # Поиск IP адреса
+from collections import namedtuple
+
 regExFindIP = r'\d+\.\d+\.\d+\.\d+'
 
 # Поиск ip адресов в EOIP
@@ -20,5 +22,29 @@ regExFind_br_port = r'interface=([\w\W]+?)(?: \n +| )bridge=([\w\W]+?)(?:[\s]pri
 regExFind_interface = r'interface=(.+?)(?: \n +| )actual-interface'
 
 
-# Выбор всей секции /interface bridge из export_compact
-regEx_interface_bridge = r'\/interface bridge\n([\s\S]+?)\n\/'
+# формирование регулярного выражения для заданной секции для выборки из "export_compact"
+def new_regex_section(section):
+    return rf'\{section}\n([\s\S]+?)\n\/'
+
+# Выбор одноименной секции из export_compact
+sections=dict([
+    ('interface_bridge', ['regex field for interface bridge']),
+    ('interface_eoip', ['regex field for interface eoip']),
+    ('interface_vlan',[]),
+    ('interface_bridge_port',[]),
+    ('ppp_secret',[]),
+    ('ip_address',[])
+])
+
+Regex_sections = namedtuple('Regex_sections', sections)
+
+regex_section = Regex_sections._make([
+    [new_regex_section('/'+section.replace('_',' '))] + sections[section] for section in Regex_sections._fields
+])
+
+regex_section = regex_section._replace(interface_eoip=regex_section.interface_eoip+[
+    'regex field for interface eoip'
+])
+regex_section = regex_section._replace(interface_bridge=regex_section.interface_bridge+[
+    'regex field for interface bridge'
+])
