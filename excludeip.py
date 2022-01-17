@@ -1,11 +1,7 @@
 import re
 import sys
 
-# regExFindIP = r'(((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]))'
-regExFindIP = r'\d+\.\d+\.\d+\.\d+'
-regExFindEOIP = r'local-address=(\d+\.\d+\.\d+\.\d+)[.\s]+remote-address=(\d+\.\d+\.\d+\.\d+)'
-regExFindLocalIPfromEOIP = r'local-address=(\d+\.\d+\.\d+\.\d+)\b'
-regExFindRemoteIPfromEOIP = r'remote-address=(\d+\.\d+\.\d+\.\d+)\b'
+from regex_example import regExFindEOIP, regExFindIP
 
 eoip_param = dict([['--local',(0,'Local')],
                   ['--remote',(1, 'Remote')]])

@@ -1,29 +1,30 @@
 import re
 import sys
 
-regExFind_bridge = r'name="([\w\W]+?)"'
-regExFind_br_port = r'interface=([\w\W]+?)(?: \n +| )bridge=([\w\W]+?)(?:[\s]priority=| \n)'
-regExFind_interface = r'interface=(.+?)(?: \n +| )actual-interface'
+from regex_example import regExFind_interface, regExFind_bridge, regExFind_br_port
+
+int_ip_addr = set()
+
 
 br_empty = set()
 br_single = set()
 br_inactive = set()
 br_in_ipaddr = set()
+int_single = set()
 
-bridge_param = dict([['--empty', ('empty bridges', br_empty)],
+bridge_param = dict([['--empty', ('bridges without ports', br_empty)],
                      ['--single', ('bridges with single port', br_single)],
                      ['--inactive', ('bridges with inactive port', br_inactive)],
-                     ['--inipaddr', ('bridges that are interfaces in "ip addresses"', br_in_ipaddr)]
+                     ['--inipaddr', ('bridges that are interfaces in "ip addresses"', br_in_ipaddr)],
+                     ['--intsingle', ('interfaces included in the bridges one by one', int_single)]
                      ])
 
 
 # Получаем список bridge port из текста с помощью регулярного выражения
 def getbrportfromfile(br_file, br_port_file, ipfile=''):
-    # global br_inactive#, br_in_ipaddr
-
-    int_ip_addr = set()
     if ipfile != '':
         with open(ipfile, encoding='ANSI') as file:
+            # получаем список всех # интерфейсов из "ip addresses"
             int_ip_addr.update(set(re.findall(regExFind_interface, file.read())))
 
     with open(br_file, encoding='ANSI') as file:
@@ -33,13 +34,13 @@ def getbrportfromfile(br_file, br_port_file, ipfile=''):
                             if bridge not in br_in_ipaddr])
 
     with open(br_port_file, encoding='ANSI') as file:
-        br_port_list = list(re.findall(regExFind_br_port, file.read()))
+        br_port_list = list(re.findall(regExFind_br_port, file.read())) # получаем список всех бридж портов из файла
         for port, bridge in br_port_list:
-            ports = bridge_dict.get(bridge, [])
-            ports.append(port)
-            if port[0] == '*':
+            ports = bridge_dict.get(bridge, []) # получаем текущий списко портов для каждого бриджа
+            ports.append(port)  # добавляем новый порт к списку портов для бриджа
+            if port[0] == '*':  # если порт неактивный, формируем список бриджей с неактивными портами
                 br_inactive.add(bridge)
-            if bridge in bridge_dict:
+            if bridge in bridge_dict:  # добавляем только в том случае если бридж ранее не был ранее отфильтрован
                 bridge_dict.update({bridge: ports})
             # else:
             #     print(f'The bridge="{bridge}" is not contained in main bridge list.')
@@ -100,6 +101,8 @@ if __name__ == '__main__':
             br_empty.add(key)
         elif len(value) == 1:
             br_single.add(key)
+            if value[0] not in int_ip_addr: # исключаем интерфейсы которые есть в "ip addresss"
+                int_single.add(value[0])
 
     print(f'Total bridges - {len(br_port_list)}.\n')
     for value in bridge_param.values():
