@@ -1,50 +1,48 @@
-# Поиск IP адреса
+import re
+
 from collections import namedtuple
+from pprint import pprint
 
-regExFindIP = r'\d+\.\d+\.\d+\.\d+'
-
-# Поиск ip адресов в EOIP
-regExFindEOIP = r'local-address=(\d+\.\d+\.\d+\.\d+)[.\s]+remote-address=(\d+\.\d+\.\d+\.\d+)'
-
-# Поиск LocalIP адреса в EOIP
-regExFindLocalIPfromEOIP = r'local-address=(\d+\.\d+\.\d+\.\d+)\b'
-
-# Поиск RemoteIP адреса в EOIP
-regExFindRemoteIPfromEOIP = r'remote-address=(\d+\.\d+\.\d+\.\d+)\b'
-
-# Поиск бриджей
-regExFind_bridge = r'name="([\w\W]+?)"'
-
-# Поиск бридж портов
-regExFind_br_port = r'interface=([\w\W]+?)(?: \n +| )bridge=([\w\W]+?)(?:[\s]priority=| \n)'
-
-# Поиск интерфейсов в "ip addresses"
-regExFind_interface = r'interface=(.+?)(?: \n +| )actual-interface'
-
+regex_flash = r'\\\n *'  # удаление переносов из конфигурационного файла
 
 # формирование регулярного выражения для заданной секции для выборки из "export_compact"
 def new_regex_section(section):
     return rf'\{section}\n([\s\S]+?)\n\/'
 
+
+def parse_section(section, config):
+    # pass
+    config = re.sub(regex_flash, '', config)  # удаление переносов из конфигурационного файла
+    section_config = re.findall(section[0], config)[0]
+    res = re.findall(section[1], section_config)
+    return res
+
+
 # Выбор одноименной секции из export_compact
-sections=dict([
-    ('interface_bridge', ['regex field for interface bridge']),
-    ('interface_eoip', ['regex field for interface eoip']),
-    ('interface_vlan',[]),
-    ('interface_bridge_port',[]),
-    ('ppp_secret',[]),
-    ('ip_address',[])
+sections = dict([
+    ('interface_bridge', [r'add(?:.+)name=(.+?)(?: protocol-mode|\n)']),  # возвращает имя bridge
+    ('interface_eoip',  # возвращает local-address, name, remote-address
+     [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)name=(.+?) remote-address=((?:\d+\.){3}\d+)']),
+    ('interface_vlan', [r'add(?:.+)name=(.+?)(?: vlan-id|\n)']),  # возвращает имя vlan
+    ('interface_bridge_port', [r'add\b(?:.+?)bridge=(.+)(?:.+?)interface=(.+?)\n']),  # возвращает bridge и interface
+    ('ppp_secret', [r'add(?:.+)remote-address=((?:\d+\.){3}\d+)(?: service|\n| )']), # возвращает remote-address
+    ('ip_address', [r'add(?:.+)interface=(.+?)(?: network|\n)']) # возвращает interface
 ])
 
 Regex_sections = namedtuple('Regex_sections', sections)
 
 regex_section = Regex_sections._make([
-    [new_regex_section('/'+section.replace('_',' '))] + sections[section] for section in Regex_sections._fields
+    [new_regex_section('/' + section.replace('_', ' '))] + sections[section] for section in Regex_sections._fields
 ])
 
-regex_section = regex_section._replace(interface_eoip=regex_section.interface_eoip+[
-    'regex field for interface eoip'
-])
-regex_section = regex_section._replace(interface_bridge=regex_section.interface_bridge+[
-    'regex field for interface bridge'
-])
+if __name__ == '__main__':
+    ipfile = 'export_compact.txt.rsc'
+    with open(ipfile, encoding='ANSI') as file:
+        config = file.read()
+
+    # print(parse_section(regex_section.interface_bridge, config))
+    # pprint(parse_section(regex_section.interface_eoip, config))
+    # pprint(parse_section(regex_section.interface_vlan, config))
+    # pprint(parse_section(regex_section.interface_bridge_port, config))
+    # pprint(parse_section(regex_section.ppp_secret, config))
+    pprint(set(parse_section(regex_section.ip_address, config)))

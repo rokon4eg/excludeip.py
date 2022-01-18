@@ -1,7 +1,10 @@
 import re
 import sys
 
-from regex_example import regExFindEOIP, regExFindIP
+regExFindIP = r'\d+\.\d+\.\d+\.\d+'
+
+# Поиск ip адресов в EOIP
+regExFindEOIP = r'local-address=(\d+\.\d+\.\d+\.\d+)[.\s]+remote-address=(\d+\.\d+\.\d+\.\d+)'
 
 eoip_param = dict([['--local',(0,'Local')],
                   ['--remote',(1, 'Remote')]])
@@ -30,7 +33,7 @@ def compareIPlist(iplistmain, subiplist, eoip=None):
             check_ip = return_ip = ip
         else:
             check_ip = ip[eoip]  # Формирует список в котором проверяем вхождения
-            return_ip = ip[1]
+            return_ip = ip[1]  # Формирует возвращаемый список
         if not (check_ip in subiplist):
             res.add(return_ip)
     return res

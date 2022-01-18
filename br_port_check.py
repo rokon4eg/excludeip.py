@@ -1,9 +1,16 @@
 import re
 import sys
 
-from regex_example import regExFind_interface, regExFind_bridge, regExFind_br_port
-
 int_ip_addr = set()
+
+# Поиск бриджей
+regExFind_bridge = r'name="([\w\W]+?)"'
+
+# Поиск бридж портов
+regExFind_br_port = r'interface=([\w\W]+?)(?: \n +| )bridge=([\w\W]+?)(?:[\s]priority=| \n)'
+
+# Поиск интерфейсов в "ip addresses"
+regExFind_interface = r'interface=(.+?)(?: \n +| )actual-interface'
 
 
 br_empty = set()
@@ -11,12 +18,12 @@ br_single = set()
 br_inactive = set()
 br_in_ipaddr = set()
 int_single = set()
+vlans_free = set()
 
 bridge_param = dict([['--empty', ('bridges without ports', br_empty)],
                      ['--single', ('bridges with single port', br_single)],
-                     ['--inactive', ('bridges with inactive port', br_inactive)],
-                     ['--inipaddr', ('bridges that are interfaces in "ip addresses"', br_in_ipaddr)],
-                     ['--intsingle', ('interfaces included in the bridges one by one', int_single)]
+                     ['--intsingle', ('interfaces included in the bridges one by one', int_single)],
+                     ['--vlan',('vlans that are not in bridges and ip addresses', vlans_free)]
                      ])
 
 
