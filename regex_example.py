@@ -10,11 +10,18 @@ def new_regex_section(section):
     return rf'\{section}\n([\s\S]+?)\n\/'
 
 
-def parse_section(section, config):
+def parse_section(section, config, reg_id=1):
+    """
+
+    :param section:
+    :param config:
+    :param reg_id: выбор регулярки с помощью которой парсить секцию
+    :return:
+    """
     # pass
     config = re.sub(regex_flash, '', config)  # удаление переносов из конфигурационного файла
     section_config = re.findall(section[0], config)[0]
-    res = re.findall(section[1], section_config)
+    res = re.findall(section[reg_id], section_config)
     return res
 
 
@@ -27,7 +34,8 @@ sections = dict([
     ('interface_vlan', [r'add(?:.+)name=(.+?)(?: vlan-id|\n)']),  # возвращает имя vlan
     ('interface_bridge_port', [r'add\b(?:.+?)bridge=(.+)(?:.+?)interface=(.+?)\n']),  # возвращает bridge и interface
     ('ppp_secret', [r'add(?:.+)remote-address=((?:\d+\.){3}\d+)(?: service|\n| )']), # возвращает remote-address
-    ('ip_address', [r'add(?:.+)interface=(.+?)(?: network|\n)']) # возвращает interface
+    ('ip_address', [r'add(?:.+)interface=(.+?)(?: network|\n)',  # возвращает interface
+                    r'add address=((?:\d+\.){3}\d+)'])   # возвращает ip
 ])
 
 Regex_sections = namedtuple('Regex_sections', sections)
