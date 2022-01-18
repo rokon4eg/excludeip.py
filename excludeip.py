@@ -22,7 +22,7 @@ def getipfromfile(filename, regex):
 def compareIPlist(iplistmain, subiplist, eoip=None):
     """
     :param iplistmain: Список IP для проверки вхождений из :param subiplist:
-    :param eoip: Определяет какой список проверять если анализиурем ЕОИП
+    :param eoip: Определяет какой список проверять если анализируем ЕОИП
     eoip = 0 - Проверяем в LocalAddress
     eoip = 1 - Проверяем в RemoteAddress
     :return: возвращаем список IP. В случае ЕОИП это всегда RemoteAddress

@@ -21,8 +21,9 @@ def parse_section(section, config):
 # Выбор одноименной секции из export_compact
 sections = dict([
     ('interface_bridge', [r'add(?:.+)name=(.+?)(?: protocol-mode|\n)']),  # возвращает имя bridge
-    ('interface_eoip',  # возвращает local-address, name, remote-address
-     [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)name=(.+?) remote-address=((?:\d+\.){3}\d+)']),
+    ('interface_eoip', [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)remote-address=((?:\d+\.){3}\d+)']),
+    # возвращает local-address, remote-address
+     # [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)name=(.+?) remote-address=((?:\d+\.){3}\d+)']),
     ('interface_vlan', [r'add(?:.+)name=(.+?)(?: vlan-id|\n)']),  # возвращает имя vlan
     ('interface_bridge_port', [r'add\b(?:.+?)bridge=(.+)(?:.+?)interface=(.+?)\n']),  # возвращает bridge и interface
     ('ppp_secret', [r'add(?:.+)remote-address=((?:\d+\.){3}\d+)(?: service|\n| )']), # возвращает remote-address
@@ -41,8 +42,8 @@ if __name__ == '__main__':
         config = file.read()
 
     # print(parse_section(regex_section.interface_bridge, config))
-    # pprint(parse_section(regex_section.interface_eoip, config))
+    pprint(parse_section(regex_section.interface_eoip, config))
     # pprint(parse_section(regex_section.interface_vlan, config))
     # pprint(parse_section(regex_section.interface_bridge_port, config))
     # pprint(parse_section(regex_section.ppp_secret, config))
-    pprint(set(parse_section(regex_section.ip_address, config)))
+    # pprint(set(parse_section(regex_section.ip_address, config)))
