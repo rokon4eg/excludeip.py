@@ -1,7 +1,11 @@
 import sys
 from pprint import pprint
 
-from br_port_check import bridge_param, int_ip_addr, br_empty, br_single, int_single, vlans_free, eoip_free
+# from br_port_check import bridge_param, \
+#     int_ip_addr, br_empty, br_single, int_single, vlans_free, eoip_free, \
+#     print_bridge, ppp_free
+from br_port_check import *
+from excludeip import getipfromfile, regExFindIP
 from regex_example import parse_section, regex_section
 
 f'''
@@ -31,10 +35,14 @@ export_compact.txt.rsc - файл с конфигурацией получены
 
 def get_ip_secrets(config, file_tu, file_active=None):
     """
-ToDo: Сравнить IP адреса из PPP secrets с адресами в ТУ (ip_from_address_plan.txt)
-      Исключить активные PPP (ppp_active_from_cm.txt)
+DONE! ToDo: Сравнить IP адреса из PPP secrets с адресами в ТУ (ip_from_address_plan.txt)
+       Исключить активные PPP (ppp_active_from_cm.txt)
     """
-    res = set()
+    ip_ppp = set(parse_section(regex_section.ppp_secret,config))
+    ip_from_tu = set(getipfromfile(file_tu, regExFindIP))
+    ip_active = set
+    if file_active:
+        ip_active = set(getipfromfile(file_active, regExFindIP))
 
     def exclude_ip_from_tu():
         pass
@@ -42,7 +50,8 @@ ToDo: Сравнить IP адреса из PPP secrets с адресами в �
     def exclude_ip_from_active():
         pass
 
-    return res
+    ppp_free.update(ip_ppp - ip_from_tu - ip_active)
+    return ppp_free
 
 
 def get_ip_eoip(config, file_tu, file_active=None):
@@ -135,6 +144,7 @@ def get_free_vlans(config):
 if __name__ == '__main__':
     config_file = 'export_compact.txt.rsc'
     file_tu = 'ip_from_address_plan.txt'
+    file_active = 'ppp_active_from_cm.txt'
 
     # if len(sys.argv) < 2:
     #     print(description)
@@ -156,4 +166,16 @@ if __name__ == '__main__':
     get_bridges(config)
     get_free_vlans(config)
     # eoip_free = set()
+    get_ip_secrets(config, file_tu, file_active)
+
+    param = sys.argv & bridge_param.keys()
+    if not param:
+        for key in bridge_param:
+            print_bridge(key)
+    else:
+        while param:
+            print_bridge(param.pop())
+
+
+
     print('The End!')

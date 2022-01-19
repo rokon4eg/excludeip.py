@@ -20,12 +20,14 @@ br_in_ipaddr = set()
 int_single = set()
 vlans_free = set()
 eoip_free  = set()
+ppp_free = set()
 
 bridge_param = dict([['--empty', ('bridges without ports', br_empty)],
                      ['--single', ('bridges with single port', br_single)],
                      ['--intsingle', ('interfaces included in the bridges one by one', int_single)],
                      ['--vlans_free',('vlans that are not in bridges and ip addresses', vlans_free)],
-                     ['--eoip_free',('remote ip addresses from eoip that are not in TU and ip addresses',eoip_free)]
+                     ['--eoip_free',('remote ip addresses from eoip that are not in TU and ip addresses',eoip_free)],
+                     ['---ppp_free',('remote ip addresses from PPP that are not in TU and not in active PPP', ppp_free)]
                      ])
 
 
