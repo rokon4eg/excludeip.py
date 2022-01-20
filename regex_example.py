@@ -37,7 +37,7 @@ regex_section = Regex_sections._make([
     regexlist[0] - для выбора всей секции из конфигурационного файла
     regexlist[1:] - для выбора нужных значений в зависимости от задачи
 """
-
+regExFindIP = r'\d+\.\d+\.\d+\.\d+'
 
 def parse_section(section, config, reg_id=1):
     """

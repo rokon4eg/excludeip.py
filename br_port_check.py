@@ -3,6 +3,7 @@ import sys
 
 int_ip_addr = set()
 
+regExFindIP = r'\d+\.\d+\.\d+\.\d+'
 # Поиск бриджей
 regExFind_bridge = r'name="([\w\W]+?)"'
 
@@ -21,13 +22,13 @@ vlans_free = set()
 eoip_free = set()
 ip_free = set()
 
-general_param = dict([['--empty', ('bridges without ports', br_empty)],
-                      ['--single', ('bridges with single port', br_single)],
-                      ['--intsingle', ('interfaces included in the bridges one by one', int_single)],
-                      ['--vlans_free', ('vlans that are not in bridges and ip addresses', vlans_free)],
-                      ['--eoip_free', ('name of eoip that are not in bridges, vlans or ip addresses', eoip_free)],
+general_param = dict([['--empty', ('Бриджы без портов', br_empty)],
+                      ['--single', ('Бриджы с одним портом', br_single)],
+                      ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single)],
+                      ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах', vlans_free)],
+                      ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в IP адресах', eoip_free)],
                       ['---ip_free',
-                      ('remote ip addresses from PPP and EOIP that are not in TU and not in active PPP', ip_free)]
+                      ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free)]
                       ])
 
 
@@ -67,7 +68,7 @@ if __name__ == '__main__':
 
     key_param = ''
     for key, value in general_param.items():
-        key_param += f'if use key "{key}"\t print only {value[0]}\n       '
+        key_param += f'if use key "{key}"\t print only {value[0]}\n      '
 
     description = f'''
     1. args: br_file br_port_file [--empty|--single|--inactive|--inipaddr] [-ipfile ip_addr.txt]
