@@ -8,8 +8,10 @@ regex_flash = r'\\\n *'  # удаление переносов из конфиг
 # Выбор одноименной секции из export_compact
 sections = dict([
     ('interface_bridge', [r'add(?:.+)name=(.+?)(?: protocol-mode|\n)']),  # возвращает имя bridge
-    ('interface_eoip', [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)remote-address=((?:\d+\.){3}\d+)']),
-    # возвращает local-address, remote-address
+    ('interface_eoip', [r'add\b(?:.+?)name=(.+?) remote-address',   # возвращает имя EOIP
+                        r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)',  # возвращает ip local-address
+                        r'add\b(?:.+?)remote-address=((?:\d+\.){3}\d+)'  # возвращает ip remote-address
+                        ]),
     # [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)name=(.+?) remote-address=((?:\d+\.){3}\d+)']),
     ('interface_vlan', [r'add(?:.+)name=(.+?)(?: vlan-id|\n)']),  # возвращает имя vlan
     ('interface_bridge_port', [r'add\b(?:.+?)bridge=(.+)(?:.+?)interface=(.+?)\n',  # возвращает bridge и interface

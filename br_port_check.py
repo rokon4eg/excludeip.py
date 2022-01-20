@@ -12,22 +12,22 @@ regExFind_br_port = r'interface=([\w\W]+?)(?: \n +| )bridge=([\w\W]+?)(?:[\s]pri
 # Поиск интерфейсов в "ip addresses"
 regExFind_interface = r'interface=(.+?)(?: \n +| )actual-interface'
 
-
 br_empty = set()
 br_single = set()
 br_inactive = set()
 br_in_ipaddr = set()
 int_single = set()
 vlans_free = set()
-eoip_free  = set()
-ppp_free = set()
+eoip_free = set()
+ip_free = set()
 
 bridge_param = dict([['--empty', ('bridges without ports', br_empty)],
                      ['--single', ('bridges with single port', br_single)],
                      ['--intsingle', ('interfaces included in the bridges one by one', int_single)],
-                     ['--vlans_free',('vlans that are not in bridges and ip addresses', vlans_free)],
-                     ['--eoip_free',('remote ip addresses from eoip that are not in TU and ip addresses',eoip_free)],
-                     ['---ppp_free',('remote ip addresses from PPP that are not in TU and not in active PPP', ppp_free)]
+                     ['--vlans_free', ('vlans that are not in bridges and ip addresses', vlans_free)],
+                     ['--eoip_free', ('name of eoip that are not in bridges, vlans or ip addresses', eoip_free)],
+                     ['---ip_free',
+                      ('remote ip addresses from PPP and EOIP that are not in TU and not in active PPP', ip_free)]
                      ])
 
 
@@ -45,9 +45,9 @@ def getbrportfromfile(br_file, br_port_file, ipfile=''):
                             if bridge not in br_in_ipaddr])
 
     with open(br_port_file, encoding='ANSI') as file:
-        br_port_list = list(re.findall(regExFind_br_port, file.read())) # получаем список всех бридж портов из файла
+        br_port_list = list(re.findall(regExFind_br_port, file.read()))  # получаем список всех бридж портов из файла
         for port, bridge in br_port_list:
-            ports = bridge_dict.get(bridge, []) # получаем текущий списко портов для каждого бриджа
+            ports = bridge_dict.get(bridge, [])  # получаем текущий списко портов для каждого бриджа
             ports.append(port)  # добавляем новый порт к списку портов для бриджа
             if port[0] == '*':  # если порт неактивный, формируем список бриджей с неактивными портами
                 br_inactive.add(bridge)
@@ -59,7 +59,7 @@ def getbrportfromfile(br_file, br_port_file, ipfile=''):
 
 
 def print_bridge(param):
-    print('\n', bridge_param[param][0].capitalize(),'-', len(bridge_param[param][1]), ':')
+    print('\n', bridge_param[param][0].capitalize(), '-', len(bridge_param[param][1]), ':')
     print("\n".join(bridge_param[param][1]))
 
 
@@ -112,14 +112,13 @@ if __name__ == '__main__':
             br_empty.add(key)
         elif len(value) == 1:
             br_single.add(key)
-            if value[0] not in int_ip_addr: # исключаем интерфейсы которые есть в "ip addresss"
+            if value[0] not in int_ip_addr:  # исключаем интерфейсы которые есть в "ip addresss"
                 int_single.add(value[0])
 
     print(f'Total bridges - {len(br_port_list)}.\n')
     for value in bridge_param.values():
-        print(value[0].capitalize(),'-', len(value[1]))
+        print(value[0].capitalize(), '-', len(value[1]))
     # print_bridge('--inactive')
-
 
     param = sys.argv & bridge_param.keys()
     if len(param) == 1:

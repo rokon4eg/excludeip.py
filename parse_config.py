@@ -3,7 +3,7 @@ from pprint import pprint
 
 # from br_port_check import bridge_param, \
 #     int_ip_addr, br_empty, br_single, int_single, vlans_free, eoip_free, \
-#     print_bridge, ppp_free
+#     print_bridge, ip_free
 from br_port_check import *
 from excludeip import getipfromfile, regExFindIP
 from regex_example import parse_section, regex_section
@@ -33,33 +33,25 @@ export_compact.txt.rsc - файл с конфигурацией получены
 '''
 
 
-def get_ip_secrets(config, file_tu, file_active=None):
+def get_ip_free(config, file_tu, file_active=None):
     """
-DONE! ToDo: Сравнить IP адреса из PPP secrets с адресами в ТУ (ip_from_address_plan.txt)
+DONE! ToDo: Сравнить IP адреса из PPP secrets и remote address из EOIP с адресами в ТУ (ip_from_address_plan.txt)
        Исключить активные PPP (ppp_active_from_cm.txt)
     """
     ip_ppp = set(parse_section(regex_section.ppp_secret,config))
+    ip_eoip = set(parse_section(regex_section.interface_eoip,config, 3))
     ip_from_tu = set(getipfromfile(file_tu, regExFindIP))
-    ip_active = set
+    ip_active = set()
     if file_active:
         ip_active = set(getipfromfile(file_active, regExFindIP))
-
-    def exclude_ip_from_tu():
-        pass
-
-    def exclude_ip_from_active():
-        pass
-
-    ppp_free.update(ip_ppp - ip_from_tu - ip_active)
-    return ppp_free
+    ip_free.update((ip_ppp | ip_eoip) - ip_from_tu - ip_active)
+    return ip_free
 
 
 def get_ip_eoip(config, file_tu, file_active=None):
     """
-2. ToDo: Исключить те EOIP для которых local-addresses участвуют в "ip addresses"
-
-3. ToDo : Исключить те EOIP для которых remote-addresses есть в ТУ (ip_from_address_plan.txt)
-    Исключить активные PPP (ppp_active_from_cm.txt)
+2. ToDo: Исключить те EOIP для которых local-addresses участвуют в "ip addresses",
+    a remote-addresses есть в ТУ (ip_from_address_plan.txt) или в активных PPP (ppp_active_from_cm.txt)
     """
     res = set()
 
@@ -166,7 +158,7 @@ if __name__ == '__main__':
     get_bridges(config)
     get_free_vlans(config)
     # eoip_free = set()
-    get_ip_secrets(config, file_tu, file_active)
+    get_ip_free(config, file_tu, file_active)
 
     param = sys.argv & bridge_param.keys()
     if not param:
