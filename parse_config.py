@@ -1,7 +1,7 @@
 import sys
 from pprint import pprint
 
-# from br_port_check import bridge_param, \
+# from br_port_check import general_param, \
 #     int_ip_addr, br_empty, br_single, int_single, vlans_free, eoip_free, \
 #     print_bridge, ip_free
 from br_port_check import *
@@ -26,48 +26,44 @@ f'''
 
 description = f''' 
 Ex.: python parse_config.py export_compact.txt.rsc [-tu ip_from_address_plan.txt] [-active ppp_active_from_cm.txt] 
-[{'|'.join(bridge_param)}]
+[{'|'.join(general_param)}]
 export_compact.txt.rsc - файл с конфигурацией полученый командой /export compact file=export_compact.txt
 -tu file_name - файл с ip адересами из ТУ КРУС
 -active file_name - файл с активными сессиями ppp на микротике
 '''
 
+config = ''
+ip_from_tu = set()
+ip_active_ppp = set()
+int_ip_addr = set()
+port_in_bridges = set()
+vlans = set()
 
-def get_ip_free(config, file_tu, file_active=None):
+
+def get_ip_free():
     """
 DONE! ToDo: Сравнить IP адреса из PPP secrets и remote address из EOIP с адресами в ТУ (ip_from_address_plan.txt)
        Исключить активные PPP (ppp_active_from_cm.txt)
     """
-    ip_ppp = set(parse_section(regex_section.ppp_secret,config))
-    ip_eoip = set(parse_section(regex_section.interface_eoip,config, 3))
-    ip_from_tu = set(getipfromfile(file_tu, regExFindIP))
-    ip_active = set()
-    if file_active:
-        ip_active = set(getipfromfile(file_active, regExFindIP))
-    ip_free.update((ip_ppp | ip_eoip) - ip_from_tu - ip_active)
+    ip_ppp = set(parse_section(regex_section.ppp_secret, config))
+    ip_eoip = set(parse_section(regex_section.interface_eoip, config, 3))
+    # ip_from_tu = set(getipfromfile(file_tu, regExFindIP))
+    # ip_active = set()
+    # if file_active:
+    #     ip_active = set(getipfromfile(file_active, regExFindIP))
+    ip_free.update((ip_ppp | ip_eoip) - ip_from_tu - ip_active_ppp)
     return ip_free
 
 
-def get_ip_eoip(config, file_tu, file_active=None):
+def get_ip_eoip():
     """
-2. ToDo: Исключить те EOIP для которых local-addresses участвуют в "ip addresses",
-    a remote-addresses есть в ТУ (ip_from_address_plan.txt) или в активных PPP (ppp_active_from_cm.txt)
+2. ToDo: Исключить те EOIP которых нет в бридж портах, вланах, ip addresses
     """
-    res = set()
+    name_eoip = set(parse_section(regex_section.interface_eoip, config))
+    eoip_free.update(name_eoip - port_in_bridges - vlans - ip_from_tu)
+    return eoip_free
 
-    def exclude_local_eoip_from_tu():
-        pass
-
-    def exclude_remote_eoip_from_tu():
-        pass
-
-    def exclude_active():
-        pass
-
-    return res
-
-
-def get_bridges(config):
+def get_bridges():
     """
 4. DONE! ToDo: Исключить бриджы которые участвуют в "ip addresses"
             Вывести бриджы без портов
@@ -86,10 +82,6 @@ def get_bridges(config):
             res += f'\n\nFree vlans: {len(self[2])}\n'
             res += "\n".join(self[2])
             return res
-
-    # br_empty = set()
-    # br_single = set()
-    # int_single = set()
 
     all_bridges = set(parse_section(regex_section.interface_bridge, config))  # получаем все бриджи из конфига
     # int_ip_addr = set(parse_section(regex_section.ip_address, config)) # получаем все порты на которых есть ip
@@ -112,7 +104,8 @@ def get_bridges(config):
     # return Res(res)
     return Res([br_empty, br_single, int_single])
 
-def get_free_vlans(config):
+
+def get_free_vlans():
     """
 5. DONE! ToDo: Вывести вланы, не участвующие в бриджах и в "ip addresses"
     """
@@ -124,19 +117,19 @@ def get_free_vlans(config):
             res += "\n".join(self[0])
             return res
 
-    vlans = parse_section(regex_section.interface_vlan, config)  # получаем список всех влан
+    # vlans = parse_section(regex_section.interface_vlan, config)  # получаем список всех влан
     # int_ip_addr = parse_section(regex_section.ip_address, config)  # получаем список интерфейсов на которых есть ip
-    port_in_bridges = parse_section(regex_section.interface_bridge_port, config, reg_id=2)
-    # Done: исключить вланы, участвующие в бриджах
+    # port_in_bridges = parse_section(regex_section.interface_bridge_port, config, reg_id=2)
 
+    # Done: исключить вланы, участвующие в бриджах
     vlans_free.update(set(vlans) - set(int_ip_addr) - set(port_in_bridges))
     return Res([vlans_free, len(vlans), len(int_ip_addr), len(port_in_bridges)])
 
 
 if __name__ == '__main__':
     config_file = 'export_compact.txt.rsc'
-    file_tu = 'ip_from_address_plan.txt'
-    file_active = 'ppp_active_from_cm.txt'
+    ip_from_tu = set(getipfromfile('ip_from_address_plan.txt', regExFindIP))
+    ip_active_ppp = set(getipfromfile('ppp_active_from_cm.txt', regExFindIP))
 
     # if len(sys.argv) < 2:
     #     print(description)
@@ -147,27 +140,29 @@ if __name__ == '__main__':
     # file_active = ''
     # if '-tu' in sys.argv:
     #     file_tu = sys.argv[sys.argv.index('-tu') + 1]
+    #     ip_from_tu.update(set(getipfromfile(file_tu, regExFindIP)))
     # if '-active' in sys.argv:
-    #     file_active = sys.argv[sys.argv.index('-active') + 1]
+    #     ip_active_ppp = sys.argv[sys.argv.index('-active') + 1]
+    #     ip_active_ppp.update(set(getipfromfile(file_active, regExFindIP)))
 
     with open(config_file, encoding='ANSI') as file:
         config = file.read()
 
     int_ip_addr = set(parse_section(regex_section.ip_address, config))
+    port_in_bridges = set(parse_section(regex_section.interface_bridge_port, config, reg_id=2))
+    vlans = set(parse_section(regex_section.interface_vlan, config))  # получаем список всех влан
 
-    get_bridges(config)
-    get_free_vlans(config)
-    # eoip_free = set()
-    get_ip_free(config, file_tu, file_active)
+    get_bridges()
+    get_free_vlans()
+    get_ip_eoip()
+    get_ip_free()
 
-    param = sys.argv & bridge_param.keys()
+    param = sys.argv & general_param.keys()
     if not param:
-        for key in bridge_param:
+        for key in general_param:
             print_bridge(key)
     else:
         while param:
             print_bridge(param.pop())
-
-
 
     print('The End!')

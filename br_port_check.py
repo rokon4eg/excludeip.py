@@ -21,14 +21,14 @@ vlans_free = set()
 eoip_free = set()
 ip_free = set()
 
-bridge_param = dict([['--empty', ('bridges without ports', br_empty)],
-                     ['--single', ('bridges with single port', br_single)],
-                     ['--intsingle', ('interfaces included in the bridges one by one', int_single)],
-                     ['--vlans_free', ('vlans that are not in bridges and ip addresses', vlans_free)],
-                     ['--eoip_free', ('name of eoip that are not in bridges, vlans or ip addresses', eoip_free)],
-                     ['---ip_free',
+general_param = dict([['--empty', ('bridges without ports', br_empty)],
+                      ['--single', ('bridges with single port', br_single)],
+                      ['--intsingle', ('interfaces included in the bridges one by one', int_single)],
+                      ['--vlans_free', ('vlans that are not in bridges and ip addresses', vlans_free)],
+                      ['--eoip_free', ('name of eoip that are not in bridges, vlans or ip addresses', eoip_free)],
+                      ['---ip_free',
                       ('remote ip addresses from PPP and EOIP that are not in TU and not in active PPP', ip_free)]
-                     ])
+                      ])
 
 
 # Получаем список bridge port из текста с помощью регулярного выражения
@@ -59,14 +59,14 @@ def getbrportfromfile(br_file, br_port_file, ipfile=''):
 
 
 def print_bridge(param):
-    print('\n', bridge_param[param][0].capitalize(), '-', len(bridge_param[param][1]), ':')
-    print("\n".join(bridge_param[param][1]))
+    print('\n', general_param[param][0].capitalize(), '-', len(general_param[param][1]), ':')
+    print("\n".join(general_param[param][1]))
 
 
 if __name__ == '__main__':
 
     key_param = ''
-    for key, value in bridge_param.items():
+    for key, value in general_param.items():
         key_param += f'if use key "{key}"\t print only {value[0]}\n       '
 
     description = f'''
@@ -116,13 +116,13 @@ if __name__ == '__main__':
                 int_single.add(value[0])
 
     print(f'Total bridges - {len(br_port_list)}.\n')
-    for value in bridge_param.values():
+    for value in general_param.values():
         print(value[0].capitalize(), '-', len(value[1]))
     # print_bridge('--inactive')
 
-    param = sys.argv & bridge_param.keys()
+    param = sys.argv & general_param.keys()
     if len(param) == 1:
         print_bridge(param.pop())
     else:
-        for key in bridge_param:
+        for key in general_param:
             print_bridge(key)
