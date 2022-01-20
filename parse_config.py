@@ -57,7 +57,7 @@ DONE! ToDo: Сравнить IP адреса из PPP secrets и remote address 
 
 def get_ip_eoip():
     """
-2. ToDo: Исключить те EOIP которых нет в бридж портах, вланах, ip addresses
+2. DONE! ToDo: Исключить те EOIP которых нет в бридж портах, вланах, ip addresses
     """
     name_eoip = set(parse_section(regex_section.interface_eoip, config))
     eoip_free.update(name_eoip - port_in_bridges - vlans - ip_from_tu)
