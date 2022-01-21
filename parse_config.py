@@ -1,6 +1,5 @@
-import os
 import re
-import sys
+from sys import exit, argv
 from regex_example import parse_section, regex_section, regExFindIP
 
 f'''
@@ -133,18 +132,20 @@ if __name__ == '__main__':
     # ip_active_ppp = set(getipfromfile('ppp_active_from_cm.txt', regExFindIP))
 
     config_file = ''
-    if len(sys.argv) < 2:
-        print(description)
+    print(description)
+    if len(argv) < 2:
+        print('Не указан конфигурационный файл')
+        input('For exit press ENTER...', )
         exit()
     else:
-        config_file = sys.argv[1]
+        config_file = argv[1]
     file_tu = ''
     file_active = ''
-    if '-tu' in sys.argv:
-        file_tu = sys.argv[sys.argv.index('-tu') + 1]
+    if '-tu' in argv:
+        file_tu = argv[argv.index('-tu') + 1]
         ip_from_tu.update(set(getipfromfile(file_tu, regExFindIP)))
-    if '-active' in sys.argv:
-        file_active = sys.argv[sys.argv.index('-active') + 1]
+    if '-active' in argv:
+        file_active = argv[argv.index('-active') + 1]
         ip_active_ppp.update(set(getipfromfile(file_active, regExFindIP)))
 
     with open(config_file, encoding='ANSI') as file:
@@ -159,12 +160,12 @@ if __name__ == '__main__':
     get_ip_eoip()
     get_ip_free()
 
-    param = sys.argv & general_param.keys()
+    param = argv & general_param.keys()
     if param:
         print_bridge(param)
     else:
         print_bridge(general_param.keys())
 
     print('\nThe End!')
-    # input('For exit press ENTER...',)
-    os.system('pause')
+    input('For exit press ENTER...',)
+    # os.system('pause')
