@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from regex_example import parse_section, regex_section, regExFindIP
@@ -41,7 +42,7 @@ for key, value in general_param.items():
     key_param += f'if use key "{key}"\t - {value[0]}\n   '
 
 description = f''' 
-Ex.: python parse_config.py export_compact.txt.rsc [-tu ip_from_address_plan.txt] [-active ppp_active_from_cm.txt] 
+Ex.: parse_config.exe export_compact.txt.rsc [-tu ip_from_address_plan.txt] [-active ppp_active_from_cm.txt] 
 [{'|'.join(general_param)}]
 export_compact.txt.rsc - файл с конфигурацией, полученный командой /export compact file=export_compact.txt
 -tu file_name - файл с ip адересами из ТУ КРУС
@@ -59,9 +60,12 @@ port_in_bridges = set()
 vlans = set()
 
 
-def print_bridge(param):
-    print('\n', general_param[param][0].capitalize(), '-', len(general_param[param][1]), ':')
-    print("\n".join(general_param[param][1]))
+def print_bridge(params):
+    for param in params:
+        print(general_param[param][0].capitalize(), '-', len(general_param[param][1]), '.')
+    for param in params:
+        print('\n---'+general_param[param][0].capitalize(), '-', len(general_param[param][1]),':')
+        print("\n".join(general_param[param][1]))
 
 
 # Получаем список IP адресов из текста с помощью регулярного выражения
@@ -156,11 +160,11 @@ if __name__ == '__main__':
     get_ip_free()
 
     param = sys.argv & general_param.keys()
-    if not param:
-        for key in general_param:
-            print_bridge(key)
+    if param:
+        print_bridge(param)
     else:
-        while param:
-            print_bridge(param.pop())
+        print_bridge(general_param.keys())
 
-    print('The End!')
+    print('\nThe End!')
+    # input('For exit press ENTER...',)
+    os.system('pause')
