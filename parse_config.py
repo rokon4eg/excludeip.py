@@ -100,7 +100,8 @@ def get_eoip_free():
 2. DONE! ToDo: Исключить те EOIP которых нет в бридж портах, вланах, bonding
     """
     name_eoip = set(parse_section(regex_section.interface_eoip, config))
-    eoip_free.update(name_eoip - port_in_bridges - vlans - bonding)
+    int_vlans = set(parse_section(regex_section.interface_vlan, config, 2))
+    eoip_free.update(name_eoip - port_in_bridges - set(int_ip_addr) - int_vlans - bonding)
     return eoip_free
 
 
@@ -133,7 +134,7 @@ def get_vlans_free():
     """
 5. DONE! ToDo: Вывести вланы, не участвующие в бриджах и в "ip addresses"
     """
-    vlans_free.update(set(vlans) - set(int_ip_addr) - set(port_in_bridges) - bonding)
+    vlans_free.update(set(vlans) - set(int_ip_addr) - set(port_in_bridges) - bonding - int_vlans)
     return vlans_free
 
 
@@ -186,6 +187,7 @@ if __name__ == '__main__':
     int_ip_addr = set(parse_section(regex_section.ip_address, config))
     port_in_bridges = set(parse_section(regex_section.interface_bridge_port, config, reg_id=2))
     vlans = set(parse_section(regex_section.interface_vlan, config))  # получаем список всех влан
+    int_vlans = set(parse_section(regex_section.interface_vlan, config, reg_id=2))  # список портов на которых есть влан
 
     get_bridges()
     get_vlans_free()
