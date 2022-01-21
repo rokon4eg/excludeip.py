@@ -18,7 +18,8 @@ sections = dict([
                                r'add\b(?:.+?)interface=(.+?)\n']),  # возвращает только interface
     ('ppp_secret', [r'add(?:.+)remote-address=((?:\d+\.){3}\d+)(?: service|\n| )']),  # возвращает remote-address
     ('ip_address', [r'add(?:.+)interface=(.+?)(?: network|\n)',  # возвращает interface
-                    r'add address=((?:\d+\.){3}\d+)'])  # возвращает ip
+                    r'add address=((?:\d+\.){3}\d+)']),  # возвращает ip
+    ('interface_bonding', [r'add(?:.+)slaves=(.+?),(.+?)(?: transmit|\n)'])
 ])
 
 

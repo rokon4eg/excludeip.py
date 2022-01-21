@@ -31,8 +31,8 @@ ip_free = set()
 general_param = dict([['--empty', ('Бриджы без портов', br_empty)],
                       ['--single', ('Бриджы с одним портом', br_single)],
                       ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single)],
-                      ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах', vlans_free)],
-                      ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в IP адресах', eoip_free)],
+                      ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах, ни в bonding', vlans_free)],
+                      ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в bonding', eoip_free)],
                       ['--ip_free',
                        ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free)]
                       ])
@@ -95,12 +95,12 @@ DONE! ToDo: Сравнить IP адреса из PPP secrets и remote address 
     return ip_free
 
 
-def get_ip_eoip():
+def get_eoip_free():
     """
-2. DONE! ToDo: Исключить те EOIP которых нет в бридж портах, вланах, ip addresses
+2. DONE! ToDo: Исключить те EOIP которых нет в бридж портах, вланах, bonding
     """
     name_eoip = set(parse_section(regex_section.interface_eoip, config))
-    eoip_free.update(name_eoip - port_in_bridges - vlans - ip_from_tu)
+    eoip_free.update(name_eoip - port_in_bridges - vlans - bonding)
     return eoip_free
 
 
@@ -123,22 +123,21 @@ def get_bridges():
             br_empty.add(bridge)
         elif len(ports) == 1:
             br_single.add(bridge)
-            if ports[0] not in int_ip_addr:  # исключаем интерфейсы которые есть в "ip addresss"
+            if ports[0] not in (int_ip_addr|bonding):  # исключаем интерфейсы которые есть в "ip addresss" и в bonding
                 int_single.add(ports[0])
 
     return [br_empty, br_single, int_single]
 
 
-def get_free_vlans():
+def get_vlans_free():
     """
 5. DONE! ToDo: Вывести вланы, не участвующие в бриджах и в "ip addresses"
     """
-    vlans_free.update(set(vlans) - set(int_ip_addr) - set(port_in_bridges))
+    vlans_free.update(set(vlans) - set(int_ip_addr) - set(port_in_bridges) - bonding)
     return vlans_free
 
 
 if __name__ == '__main__':
-
     print(description)
 
     if len(argv) > 1:
@@ -178,13 +177,19 @@ if __name__ == '__main__':
     with open(config_file, encoding='ANSI') as file:
         config = file.read()
 
+    bonding = set()
+    s = parse_section(regex_section.interface_bonding, config)
+    [bonding.update(set(i)) for i in s]
+
+
+
     int_ip_addr = set(parse_section(regex_section.ip_address, config))
     port_in_bridges = set(parse_section(regex_section.interface_bridge_port, config, reg_id=2))
     vlans = set(parse_section(regex_section.interface_vlan, config))  # получаем список всех влан
 
     get_bridges()
-    get_free_vlans()
-    get_ip_eoip()
+    get_vlans_free()
+    get_eoip_free()
     get_ip_free()
 
     param = argv & general_param.keys()
