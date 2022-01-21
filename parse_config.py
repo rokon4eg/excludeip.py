@@ -78,7 +78,7 @@ def print_bridge(params):
         s += '\n'.join(general_param[param][1])+'\n'
         res += s
         # print(s)
-        print(f'Подробная информация в файле "{output_file}"')
+    print(f'---Подробная информация в файле "{output_file}"---')
     return res
 
 # Получаем список IP адресов из текста с помощью регулярного выражения
