@@ -66,12 +66,17 @@ vlans = set()
 
 
 def print_bridge(params):
+    res = ''
     for param in params:
-        print(general_param[param][0].capitalize(), '-', len(general_param[param][1]), '.')
+        s = f"{general_param[param][0].capitalize()} - {len(general_param[param][1])}.\n"
+        res += s
+        print(s)
     for param in params:
-        print('\n---' + general_param[param][0].capitalize(), '-', len(general_param[param][1]), ':')
-        print("\n".join(general_param[param][1]))
-
+        s = f"\n---{general_param[param][0].capitalize()} - {len(general_param[param][1])}:\n"
+        s += '\n'.join(general_param[param][1])+'\n'
+        res += s
+        print(s)
+    return res
 
 # Получаем список IP адресов из текста с помощью регулярного выражения
 def getipfromfile(filename, regex):
@@ -184,14 +189,20 @@ if __name__ == '__main__':
 
     param = argv & general_param.keys()
 
-    print(f'''--- Результат анализа конфигурации из файла "{config_file}"
+    output_msg = f'''--- Результат анализа конфигурации из файла "{config_file}"
 Исключены remote ip находящиеся в файлах "{file_tu}" и "{file_active}" 
-''')
+'''
+    print(output_msg)
+
     if param:
-        print_bridge(param)
+        to_file = print_bridge(param)
     else:
-        print_bridge(general_param.keys())
+        to_file = print_bridge(general_param.keys())
 
     print('\nThe End!')
+
+    with open('output_file.txt','w', encoding='ANSI',) as file:
+        file.write(output_msg + to_file)
+
     input('For exit press ENTER...', )
     # os.system('pause')
