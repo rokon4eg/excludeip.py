@@ -1,4 +1,5 @@
 import re
+import os.path
 from sys import exit, argv
 from regex_example import parse_section, regex_section, regExFindIP
 
@@ -32,7 +33,7 @@ general_param = dict([['--empty', ('Бриджы без портов', br_empty)
                       ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single)],
                       ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах', vlans_free)],
                       ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в IP адресах', eoip_free)],
-                      ['---ip_free',
+                      ['--ip_free',
                        ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free)]
                       ])
 
@@ -41,14 +42,19 @@ for key, value in general_param.items():
     key_param += f'if use key "{key}"\t - {value[0]}\n   '
 
 description = f''' 
-Ex.: parse_config.exe export_compact.txt.rsc [-tu ip_from_address_plan.txt] [-active ppp_active_from_cm.txt] 
+parse_config.exe export_compact.rsc [-tu ip_from_address_plan.txt] [-active ip_ppp_active_from_cm.txt] 
 [{'|'.join(general_param)}]
-export_compact.txt.rsc - файл с конфигурацией, полученный командой /export compact file=export_compact.txt
+
+export_compact.rsc - файл с конфигурацией, полученный командой /export compact file=export_compact
 -tu file_name - файл с ip адересами из ТУ КРУС
--active file_name - файл с активными сессиями ppp на микротике, 
-полученный командой /ppp active pr file=ppp_active_from_cm
+-active file_name - файл с активными сессиями PPP на, получен командой /ppp active pr file=ip_ppp_active_from_cm
 
 2. {key_param}
+Если ни один ключ не указан выводятся все!
+
+Для записи данных в файл в конце команды допишите " > output_file_name.txt"
+
+Пример: parse_config.exe export_compact.rsc -tu ip_from_address_plan.txt -active ip_ppp_active_from_cm.txt > out_file.txt
 '''
 
 config = ''
@@ -63,7 +69,7 @@ def print_bridge(params):
     for param in params:
         print(general_param[param][0].capitalize(), '-', len(general_param[param][1]), '.')
     for param in params:
-        print('\n---'+general_param[param][0].capitalize(), '-', len(general_param[param][1]),':')
+        print('\n---' + general_param[param][0].capitalize(), '-', len(general_param[param][1]), ':')
         print("\n".join(general_param[param][1]))
 
 
@@ -127,25 +133,41 @@ def get_free_vlans():
 
 
 if __name__ == '__main__':
-    # config_file = 'export_compact.txt.rsc'
-    # ip_from_tu = set(getipfromfile('ip_from_address_plan.txt', regExFindIP))
-    # ip_active_ppp = set(getipfromfile('ppp_active_from_cm.txt', regExFindIP))
 
-    config_file = ''
     print(description)
-    if len(argv) < 2:
-        print('Не указан конфигурационный файл')
-        input('For exit press ENTER...', )
-        exit()
-    else:
+
+    if len(argv) > 1:
         config_file = argv[1]
-    file_tu = ''
-    file_active = ''
+    else:
+        config_file = 'export_compact.rsc'
+
     if '-tu' in argv:
         file_tu = argv[argv.index('-tu') + 1]
-        ip_from_tu.update(set(getipfromfile(file_tu, regExFindIP)))
+    else:
+        file_tu = 'ip_from_address_plan.txt'
+
     if '-active' in argv:
         file_active = argv[argv.index('-active') + 1]
+    else:
+        file_active = 'ip_ppp_active_from_cm.txt'
+
+    if not os.path.exists(config_file):
+        print(f'! Error: Конфигурационный файл "{config_file}" не указан или не существует.')
+        input('Для выхода нажмите ENTER...', )
+        exit()
+    if not os.path.exists(file_active):
+        print(f'! Warning: Файл с IP адресами из PPP active "{file_active}" не указан или не существует.')
+        file_active = ''
+    if not os.path.exists(file_tu):
+        print(f'! Warning: Файл с IP адресами из ТУ "{file_tu}" не указан или не существует.')
+        file_tu = ''
+
+    # file_tu = ''
+    # file_active = ''
+    if file_tu:
+        ip_from_tu.update(set(getipfromfile(file_tu, regExFindIP)))
+
+    if file_active:
         ip_active_ppp.update(set(getipfromfile(file_active, regExFindIP)))
 
     with open(config_file, encoding='ANSI') as file:
@@ -161,11 +183,15 @@ if __name__ == '__main__':
     get_ip_free()
 
     param = argv & general_param.keys()
+
+    print(f'''--- Результат анализа конфигурации из файла "{config_file}"
+Исключены remote ip находящиеся в файлах "{file_tu}" и "{file_active}" 
+''')
     if param:
         print_bridge(param)
     else:
         print_bridge(general_param.keys())
 
     print('\nThe End!')
-    input('For exit press ENTER...',)
+    input('For exit press ENTER...', )
     # os.system('pause')
