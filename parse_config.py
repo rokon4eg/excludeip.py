@@ -30,13 +30,13 @@ vlans_free = set()
 eoip_free = set()
 ip_free = set()
 
-general_param = dict([['--empty', ('Бриджы без портов', br_empty)],
-                      ['--single', ('Бриджы с одним портом', br_single)],
-                      ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single)],
-                      ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах, ни в bonding', vlans_free)],
-                      ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в bonding', eoip_free)],
+general_param = dict([['--empty', ('Бриджы без портов', br_empty, '/interface bridge disable [find where name="%s"]')],
+                      ['--single', ('Бриджы с одним портом', br_single, '/interface bridge disable [find where name="%s"]')],
+                      ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single, '')],
+                      ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах, ни в bonding', vlans_free, '/interface vlan disable [find where name="%s"]')],
+                      ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в bonding', eoip_free, '/interface eoip disable [find where name="%s"]')],
                       ['--ip_free',
-                       ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free)]
+                       ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free, '')]
                       ])
 
 key_param = ''
@@ -75,7 +75,12 @@ def print_bridge(params):
         print(s)
     for param in params:
         s = f"\n---{general_param[param][0].capitalize()} - {len(general_param[param][1])}:\n"
-        s += '\n'.join(general_param[param][1])+'\n'
+        # sep = '\t'+general_param[param][2]+'\n'
+        if general_param[param][2]:
+            for br in general_param[param][1]:
+                s += f'{br}\t{general_param[param][2] % br}\n'
+        else:
+            s += '\n'.join(general_param[param][1])+'\n'
         res += s
         # print(s)
     print(f'---Подробная информация в файле "{output_file}"---')
@@ -214,5 +219,5 @@ if __name__ == '__main__':
     with open(output_file,'w', encoding='ANSI',) as file:
         file.write(output_msg + to_file)
 
-    input('For exit press ENTER...', )
+    # input('For exit press ENTER...', )
     # os.system('pause')
