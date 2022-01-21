@@ -19,6 +19,8 @@ f'''
 5. Вывести вланы, не участвующие в бриджах и в "ip addresses"
 '''
 
+output_file = 'output_file.txt'
+
 br_empty = set()
 br_single = set()
 br_inactive = set()
@@ -75,7 +77,8 @@ def print_bridge(params):
         s = f"\n---{general_param[param][0].capitalize()} - {len(general_param[param][1])}:\n"
         s += '\n'.join(general_param[param][1])+'\n'
         res += s
-        print(s)
+        # print(s)
+        print(f'Подробная информация в файле "{output_file}"')
     return res
 
 # Получаем список IP адресов из текста с помощью регулярного выражения
@@ -208,7 +211,7 @@ if __name__ == '__main__':
 
     print('\nThe End!')
 
-    with open('output_file.txt','w', encoding='ANSI',) as file:
+    with open(output_file,'w', encoding='ANSI',) as file:
         file.write(output_msg + to_file)
 
     input('For exit press ENTER...', )
