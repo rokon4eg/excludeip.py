@@ -30,13 +30,25 @@ vlans_free = set()
 eoip_free = set()
 ip_free = set()
 
-general_param = dict([['--empty', ('Бриджы без портов', br_empty, '/interface bridge disable [find where name="%s"]')],
-                      ['--single', ('Бриджы с одним портом', br_single, '/interface bridge disable [find where name="%s"]')],
-                      ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single, '')],
-                      ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах, ни в bonding', vlans_free, '/interface vlan disable [find where name="%s"]')],
-                      ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в bonding', eoip_free, '/interface eoip disable [find where name="%s"]')],
+general_param = dict([['--empty', ('Бриджы без портов', br_empty,
+                                   '/interface bridge print where name="%s"',
+                                   '/interface bridge disable [find where name="%s"]')],
+                      ['--single', ('Бриджы с одним портом', br_single,
+                                    '/interface bridge print where name="%s"',
+                                    '/interface bridge disable [find where name="%s"]')],
+                      ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single,
+                                       '/interface vlan print where name="%s"',
+                                       '/interface vlan disable [find where name="%s"]')],
+                      ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах, ни в bonding', vlans_free,
+                                        '/interface vlan print where name="%s"',
+                                        '/interface vlan disable [find where name="%s"]')],
+                      ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в bonding', eoip_free,
+                                       '/interface eoip print where name="%s"',
+                                       '/interface eoip disable [find where name="%s"]')],
                       ['--ip_free',
-                       ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free, '/interface eoip disable [find where remote-address=%s]')]
+                       ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free,
+                        '/interface eoip print where remote-address=%s',
+                        '/interface eoip disable [find where remote-address=%s]')]
                       ])
 
 key_param = ''
@@ -56,7 +68,7 @@ export_compact.rsc - файл с конфигурацией, полученны�
 
 Для записи данных в файл в конце команды допишите " > output_file_name.txt"
 
-Пример: parse_config.exe export_compact.rsc -tu ip_from_address_plan.txt -active ip_ppp_active_from_cm.txt > out_file.txt
+Пример: parse_config.exe export_compact.rsc -tu ip_from_address_plan.txt -active ip_ppp_active_from_cm.txt > out_file
 '''
 
 config = ''
@@ -79,7 +91,7 @@ def exclude_int_in_bonding(int_list, slaves_list):
 
 def print_bridge(params):
     res = ''
-    for param in params: # Формирование шапки
+    for param in params:  # Формирование шапки
         s = f"{general_param[param][0].capitalize()} - {len(general_param[param][1])}.\n"
         res += s
         print(s)
@@ -89,14 +101,17 @@ def print_bridge(params):
         # sep = '\t'+general_param[param][2]+'\n'
         if general_param[param][2]:
             for br in general_param[param][1]:
-                s += f"{br.strip(chr(34))}\t{general_param[param][2] % br.strip(chr(34))}\n"
+                s += f"{br.strip(chr(34))}" \
+                     f"\t{general_param[param][2] % br.strip(chr(34))}" \
+                     f"\t{general_param[param][3] % br.strip(chr(34))}\n"
                 # убираем кавычки вокруг интерфейса
         else:
-            s += '\n'.join(general_param[param][1])+'\n'
+            s += '\n'.join(general_param[param][1]) + '\n'
         res += s
         # print(s)
     print(f'---Подробная информация в файле "{output_file}"---')
     return res
+
 
 # Получаем список IP адресов из текста с помощью регулярного выражения
 def getipfromfile(filename, regex):
@@ -207,8 +222,6 @@ if __name__ == '__main__':
     s = parse_section(regex_section.interface_bonding, config)
     bonding.update(set(s))
 
-
-
     int_ip_addr = set(parse_section(regex_section.ip_address, config))
     port_in_bridges = set(parse_section(regex_section.interface_bridge_port, config, reg_id=2))
     vlans = set(parse_section(regex_section.interface_vlan, config))  # получаем список всех влан
@@ -233,7 +246,7 @@ if __name__ == '__main__':
 
     print('\nThe End!')
 
-    with open(output_file,'w', encoding='ANSI',) as file:
+    with open(output_file, 'w', encoding='ANSI', ) as file:
         file.write(output_msg + to_file)
 
     # input('For exit press ENTER...', )
