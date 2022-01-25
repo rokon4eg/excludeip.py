@@ -36,7 +36,7 @@ general_param = dict([['--empty', ('Бриджы без портов', br_empty,
                       ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах, ни в bonding', vlans_free, '/interface vlan disable [find where name="%s"]')],
                       ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в bonding', eoip_free, '/interface eoip disable [find where name="%s"]')],
                       ['--ip_free',
-                       ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free, '')]
+                       ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free, '/interface eoip disable [find where remote-address=%s]')]
                       ])
 
 key_param = ''
@@ -67,18 +67,30 @@ port_in_bridges = set()
 vlans = set()
 
 
+def exclude_int_in_bonding(int_list, slaves_list):
+    res = set(int_list)
+    for int in int_list:
+        for slaves in slaves_list:
+            if int in slaves:
+                res.remove(int)
+                break
+    return res
+
+
 def print_bridge(params):
     res = ''
-    for param in params:
+    for param in params: # Формирование шапки
         s = f"{general_param[param][0].capitalize()} - {len(general_param[param][1])}.\n"
         res += s
         print(s)
+
     for param in params:
         s = f"\n---{general_param[param][0].capitalize()} - {len(general_param[param][1])}:\n"
         # sep = '\t'+general_param[param][2]+'\n'
         if general_param[param][2]:
             for br in general_param[param][1]:
-                s += f'{br}\t{general_param[param][2] % br}\n'
+                s += f"{br.strip(chr(34))}\t{general_param[param][2] % br.strip(chr(34))}\n"
+                # убираем кавычки вокруг интерфейса
         else:
             s += '\n'.join(general_param[param][1])+'\n'
         res += s
@@ -109,7 +121,9 @@ def get_eoip_free():
     """
     name_eoip = set(parse_section(regex_section.interface_eoip, config))
     int_vlans = set(parse_section(regex_section.interface_vlan, config, 2))
-    eoip_free.update(name_eoip - port_in_bridges - set(int_ip_addr) - int_vlans - bonding)
+    eoip_int = name_eoip - port_in_bridges - int_ip_addr - int_vlans
+    eoip_free.update(exclude_int_in_bonding(eoip_int, bonding))
+    # DONE TODO переписать вычитание bonding с учетом проверки на вхождение
     return eoip_free
 
 
@@ -132,8 +146,10 @@ def get_bridges():
             br_empty.add(bridge)
         elif len(ports) == 1:
             br_single.add(bridge)
-            if ports[0] not in (int_ip_addr|bonding):  # исключаем интерфейсы которые есть в "ip addresss" и в bonding
-                int_single.add(ports[0])
+            if ports[0] not in int_ip_addr:
+                # исключаем интерфейсы которые есть в "ip addresss" и в bonding
+                # DONE! TODO переписать вычитание bonding с учетом проверки на вхождение
+                int_single.update(exclude_int_in_bonding([ports[0]], bonding))
 
     return [br_empty, br_single, int_single]
 
@@ -142,7 +158,8 @@ def get_vlans_free():
     """
 5. DONE! ToDo: Вывести вланы, не участвующие в бриджах и в "ip addresses"
     """
-    vlans_free.update(set(vlans) - set(int_ip_addr) - set(port_in_bridges) - bonding - int_vlans)
+    vlans_free.update(exclude_int_in_bonding(vlans - int_ip_addr - port_in_bridges - int_vlans, bonding))
+    # DONE! TODO переписать вычитание bonding с учетом проверки на вхождение
     return vlans_free
 
 
@@ -188,7 +205,7 @@ if __name__ == '__main__':
 
     bonding = set()
     s = parse_section(regex_section.interface_bonding, config)
-    [bonding.update(set(i)) for i in s]
+    bonding.update(set(s))
 
 
 

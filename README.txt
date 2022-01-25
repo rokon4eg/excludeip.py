@@ -26,11 +26,3 @@ export_compact.rsc - config_file_name - всегда первый аргумен
    if use key "--eoip_free"      - EOIP, которых нет ни в бриджах, ни во вланах, ни в IP адресах
    if use key "--ip_free"        - Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP
 Если ни один ключ не указан выводятся все!
-
-Результат будет выведен в терминал и в файл "output_file.txt". 
-Файл "output_file.txt" будет создан либо перезаписан без подтверждения!
-
-Если в системе установлен python, то для запуска будет достаточно двух файлов:
-parse_config.py
-regex_example.py
-Запускать как: python parse_config.py
