@@ -221,7 +221,6 @@ if __name__ == '__main__':
     bonding = set()
     s = parse_section(regex_section.interface_bonding, config)
     bonding.update(set(s))
-
     int_ip_addr = set(parse_section(regex_section.ip_address, config))
     port_in_bridges = set(parse_section(regex_section.interface_bridge_port, config, reg_id=2))
     vlans = set(parse_section(regex_section.interface_vlan, config))  # получаем список всех влан

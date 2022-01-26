@@ -15,7 +15,7 @@ sections = dict([
     # [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)name=(.+?) remote-address=((?:\d+\.){3}\d+)']),
     ('interface_vlan', [r'add(?:.+)name=\"?(.+?)\"?(?: vlan-id|\n)',  # возвращает имя vlan
                         r'add(?:.+)interface=\"?(.+?)\"?(?: name|\n|$)']),  # возвращает имя интерфейса
-    ('interface_bridge_port', [r'add(?:.+)bridge=\"?(.+?)(?: hw|\n|\"| inter).*face=\"?(.+?)\"?(?:\n|$)',
+    ('interface_bridge_port', [r'add(?:.+)bridge=\"?(.+?)(?: (?:\w+=)|\n|\"| inter).*face=\"?(.+?)\"?(?:\n|$)',
                                # возвращает bridge и interface
                                r'add\b(?:.+?)interface=\"?(.+?)\"?(?:\n|$)']),  # возвращает только interface
     ('ppp_secret', [r'add(?:.+)remote-address=((?:\d+\.){3}\d+)(?: service|\n| )']),  # возвращает remote-address
