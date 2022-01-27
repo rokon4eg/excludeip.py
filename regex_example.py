@@ -5,6 +5,7 @@ from pprint import pprint
 
 regex_flash = r'\\\n *'  # удаление переносов из конфигурационного файла
 
+
 # Выбор одноименной секции из export_compact
 sections = dict([
     ('interface_bridge', [r'add(?:.+)name=\"?(.+?)\"?(?: protocol-mode|\n)']),  # возвращает имя bridge
@@ -15,13 +16,13 @@ sections = dict([
     # [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)name=(.+?) remote-address=((?:\d+\.){3}\d+)']),
     ('interface_vlan', [r'add(?:.+)name=\"?(.+?)\"?(?: vlan-id|\n)',  # возвращает имя vlan
                         r'add(?:.+)interface=\"?(.+?)\"?(?: name|\n|$)']),  # возвращает имя интерфейса
-    ('interface_bridge_port', [r'add(?:.+)bridge=\"?(.+?)(?: (?:\w+=)|\n|\"| inter).*face=\"?(.+?)\"?(?:\n|$)',
+    ('interface_bridge_port', [r'add(?:.+)bridge=\"?(.+?)(?: (?:[-\w]+=)|\n|\"| inter).*face=\"?(.+?)\"?(?:\n|$)',
                                # возвращает bridge и interface
-                               r'add\b(?:.+?)interface=\"?(.+?)\"?(?:\n|$)']),  # возвращает только interface
+                               r'add(?:.+)interface=\"?(.+?)(?:\"[ \n]| [-\w]+=|\n|$)']),  # возвращает только interface
     ('ppp_secret', [r'add(?:.+)remote-address=((?:\d+\.){3}\d+)(?: service|\n| )']),  # возвращает remote-address
     ('ip_address', [r'add(?:.+)interface=\"?(.+?)\"?(?: network|\n)',  # возвращает interface
                     r'add address=((?:\d+\.){3}\d+)']),  # возвращает ip
-    ('interface_bonding', [r'add(?:.+)slaves=\"?(.+?)\"?(?: transmit|\n)'])
+    ('interface_bonding', [r'add(?:.+)slaves=\"?(.+?)\"?(?: transmit|\n)'])  # возвращает список всех slaves строкой
 ])
 
 

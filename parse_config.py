@@ -25,30 +25,31 @@ br_empty = set()
 br_single = set()
 br_inactive = set()
 br_in_ipaddr = set()
-int_single = set()
+# int_single = set()
+int_single_dict = dict()
 vlans_free = set()
 eoip_free = set()
 ip_free = set()
 
 general_param = dict([['--empty', ('Бриджы без портов', br_empty,
-                                   '/interface bridge print where name="%s"',
-                                   '/interface bridge disable [find where name="%s"]')],
+                                   '/interface bridge print where name="{0}"\t'
+                                   '/interface bridge disable [find where name="{0}"]')],
                       ['--single', ('Бриджы с одним портом', br_single,
-                                    '/interface bridge print where name="%s"',
-                                    '/interface bridge disable [find where name="%s"]')],
-                      ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single,
-                                       '/interface vlan print where name="%s"',
-                                       '/interface vlan disable [find where name="%s"]')],
+                                    '/interface bridge print where name="{0}"\t'
+                                    '/interface bridge disable [find where name="{0}"]')],
+                      ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single_dict,
+                                       '/interface {1} print where name="{0}"\t'
+                                       '/interface {1} disable [find where name="{0}]')],
                       ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах, ни в bonding', vlans_free,
-                                        '/interface vlan print where name="%s"',
-                                        '/interface vlan disable [find where name="%s"]')],
+                                        '/interface vlan print where name="{0}"\t'
+                                        '/interface vlan disable [find where name="{0}"]')],
                       ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в bonding', eoip_free,
-                                       '/interface eoip print where name="%s"',
-                                       '/interface eoip disable [find where name="%s"]')],
+                                       '/interface eoip print where name="{0}"'
+                                       '/interface eoip disable [find where name="{0}"]')],
                       ['--ip_free',
                        ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free,
-                        '/interface eoip print where remote-address=%s',
-                        '/interface eoip disable [find where remote-address=%s]')]
+                        '/interface eoip print where remote-address={0}\t'
+                        '/interface eoip disable [find where remote-address={0}]')]
                       ])
 
 key_param = ''
@@ -89,24 +90,32 @@ def exclude_int_in_bonding(int_list, slaves_list):
     return res
 
 
-def print_bridge(params):
+def print_interface(params):
     res = ''
+    sum = 0
     for param in params:  # Формирование шапки
-        s = f"{general_param[param][0].capitalize()} - {len(general_param[param][1])}.\n"
-        res += s
-        print(s)
+        count = len(general_param[param][1])
+        stroka = f"{general_param[param][0].capitalize()} - \t{count}.\n"
+        sum += count
+        res += stroka
+        print(stroka)
+    stroka = 'Итого:\t'+str(sum)+'\n'
+    res += stroka
+    print(stroka)
 
     for param in params:
-        s = f"\n---{general_param[param][0].capitalize()} - {len(general_param[param][1])}:\n"
-        # sep = '\t'+general_param[param][2]+'\n'
-        if general_param[param][2]:
-            for br in general_param[param][1]:
-                s += f"{br.strip(chr(34))}" \
-                     f"\t{general_param[param][2] % br.strip(chr(34))}" \
-                     f"\t{general_param[param][3] % br.strip(chr(34))}\n"
-                # убираем кавычки вокруг интерфейса
+        variable_for_print = general_param[param][1]
+        template_for_print = general_param[param][2]
+        s = f"\n---{general_param[param][0].capitalize()} - {len(variable_for_print)}:\n"
+        if template_for_print:  # Проверка наличия шаблона для печати
+            if type(variable_for_print) is dict:  # Если значения хранятся в словаре, значит есть доп параметр для печати
+                for int_name, int_type in variable_for_print.items():
+                    s += f"{int_name}\t{template_for_print.format(int_name, int_type)}\n"
+            else:
+                for int_name in variable_for_print:
+                    s += f"{int_name}\t{template_for_print.format(int_name)}\n"
         else:
-            s += '\n'.join(general_param[param][1]) + '\n'
+            s += '\n'.join(variable_for_print) + '\n'
         res += s
         # print(s)
     print(f'---Подробная информация в файле "{output_file}"---')
@@ -134,7 +143,7 @@ def get_eoip_free():
     """
 2. DONE! ToDo: Исключить те EOIP которых нет в бридж портах, вланах, bonding
     """
-    name_eoip = set(parse_section(regex_section.interface_eoip, config))
+
     int_vlans = set(parse_section(regex_section.interface_vlan, config, 2))
     eoip_int = name_eoip - port_in_bridges - int_ip_addr - int_vlans
     eoip_free.update(exclude_int_in_bonding(eoip_int, bonding))
@@ -148,7 +157,7 @@ def get_bridges():
             Вывести бриджы без портов
             Вывести бриджы с одним портом и эти одиночные порты
     """
-    all_bridges = set(parse_section(regex_section.interface_bridge, config))  # получаем все бриджи из конфига
+
     br_without_ipaddr = all_bridges - int_ip_addr  # исключаем бриджы на которых есть ip
     bridge_dict = dict([(bridge, []) for bridge in br_without_ipaddr])  # формируем словарь из бриджей, пока без портов
     bridge_ports = parse_section(regex_section.interface_bridge_port, config)  # получаем бриджы и порты из конфига
@@ -164,9 +173,16 @@ def get_bridges():
             if ports[0] not in int_ip_addr:
                 # исключаем интерфейсы которые есть в "ip addresss" и в bonding
                 # DONE! TODO переписать вычитание bonding с учетом проверки на вхождение
-                int_single.update(exclude_int_in_bonding([ports[0]], bonding))
+                # int_single.update(exclude_int_in_bonding([ports[0]], bonding))
+                int = ''.join(exclude_int_in_bonding([ports[0]], bonding))
+                type_int = ''
+                if int in name_eoip:
+                    type_int = 'eoip'
+                elif int in vlans:
+                    type_int = 'vlan'
+                int_single_dict.update({int:type_int})
 
-    return [br_empty, br_single, int_single]
+    return [br_empty, br_single, int_single_dict]
 
 
 def get_vlans_free():
@@ -221,6 +237,9 @@ if __name__ == '__main__':
     bonding = set()
     s = parse_section(regex_section.interface_bonding, config)
     bonding.update(set(s))
+    all_bridges = set(parse_section(regex_section.interface_bridge, config))  # получаем все бриджи из конфига
+    name_eoip = set(parse_section(regex_section.interface_eoip, config))
+
     int_ip_addr = set(parse_section(regex_section.ip_address, config))
     port_in_bridges = set(parse_section(regex_section.interface_bridge_port, config, reg_id=2))
     vlans = set(parse_section(regex_section.interface_vlan, config))  # получаем список всех влан
@@ -229,19 +248,22 @@ if __name__ == '__main__':
     get_bridges()
     get_vlans_free()
     get_eoip_free()
-    get_ip_free()
+    if file_tu:
+        get_ip_free()
 
     param = argv & general_param.keys()
 
     output_msg = f'''--- Результат анализа конфигурации из файла "{config_file}"
 Исключены remote ip находящиеся в файлах "{file_tu}" и "{file_active}" 
+Всего проанализировано: вланов - {len(vlans)}, еоип - {len(name_eoip)}, бриджей - {len(all_bridges)}, \
+порт бриджей - {len(port_in_bridges)}, бондингов - {len(bonding)} 
 '''
     print(output_msg)
 
     if param:
-        to_file = print_bridge(param)
+        to_file = print_interface(param)
     else:
-        to_file = print_bridge(general_param.keys())
+        to_file = print_interface(general_param.keys())
 
     print('\nThe End!')
 
