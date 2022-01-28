@@ -32,19 +32,19 @@ eoip_free = set()
 ip_free = set()
 
 general_param = dict([['--empty', ('Бриджы без портов', br_empty,
-                                   '/interface bridge print where name="{0}"\t'
+                                   '/interface bridge port print where bridge="{0}"\t'
                                    '/interface bridge disable [find where name="{0}"]')],
                       ['--single', ('Бриджы с одним портом', br_single,
-                                    '/interface bridge print where name="{0}"\t'
+                                    '/interface bridge port print where bridge="{0}"\t'
                                     '/interface bridge disable [find where name="{0}"]')],
                       ['--intsingle', ('Одиночные интерфейсы в бриджах', int_single_dict,
                                        '/interface {1} print where name="{0}"\t'
-                                       '/interface {1} disable [find where name="{0}]')],
+                                       '/interface {1} disable [find where name="{0}"]')],
                       ['--vlans_free', ('Вланы, которых нет ни в бриджах, ни в IP адресах, ни в bonding', vlans_free,
                                         '/interface vlan print where name="{0}"\t'
                                         '/interface vlan disable [find where name="{0}"]')],
                       ['--eoip_free', ('EOIP, которых нет ни в бриджах, ни во вланах, ни в bonding', eoip_free,
-                                       '/interface eoip print where name="{0}"'
+                                       '/interface eoip print where name="{0}"\t'
                                        '/interface eoip disable [find where name="{0}"]')],
                       ['--ip_free',
                        ('Remote ip адреса из PPP and EOIP которых нет в ТУ и нет в активных PPP', ip_free,
@@ -58,18 +58,18 @@ for key, value in general_param.items():
 
 description = f''' 
 parse_config.exe export_compact.rsc [-tu ip_from_address_plan.txt] [-active ip_ppp_active_from_cm.txt] 
-[{'|'.join(general_param)}]
+[{'|'.join(general_param)}] [-out {output_file}]
 
 export_compact.rsc - файл с конфигурацией, полученный командой /export compact file=export_compact
 -tu file_name - файл с ip адересами из ТУ КРУС
 -active file_name - файл с активными сессиями PPP на, получен командой /ppp active pr file=ip_ppp_active_from_cm
 
+-out file_name - файл для вывода результата, по-умолчанию {output_file}
+
 2. {key_param}
 Если ни один ключ не указан выводятся все!
 
-Для записи данных в файл в конце команды допишите " > output_file_name.txt"
-
-Пример: parse_config.exe export_compact.rsc -tu ip_from_address_plan.txt -active ip_ppp_active_from_cm.txt > out_file
+Пример: parse_config.exe export_compact.rsc -tu ip_from_address_plan.txt -active ip_ppp_active_from_cm.txt -out file.txt
 '''
 
 config = ''
@@ -95,11 +95,11 @@ def print_interface(params):
     sum = 0
     for param in params:  # Формирование шапки
         count = len(general_param[param][1])
-        stroka = f"{general_param[param][0].capitalize()} - \t{count}.\n"
+        stroka = f"{general_param[param][0].capitalize()} - {count}\n"
         sum += count
         res += stroka
         print(stroka)
-    stroka = 'Итого:\t'+str(sum)+'\n'
+    stroka = 'Итого: '+str(sum)+'\n'
     res += stroka
     print(stroka)
 
@@ -174,13 +174,14 @@ def get_bridges():
                 # исключаем интерфейсы которые есть в "ip addresss" и в bonding
                 # DONE! TODO переписать вычитание bonding с учетом проверки на вхождение
                 # int_single.update(exclude_int_in_bonding([ports[0]], bonding))
-                int = ''.join(exclude_int_in_bonding([ports[0]], bonding))
-                type_int = ''
-                if int in name_eoip:
-                    type_int = 'eoip'
-                elif int in vlans:
-                    type_int = 'vlan'
-                int_single_dict.update({int:type_int})
+                # int = ''.join(exclude_int_in_bonding([ports[0]], bonding))
+                if int := ''.join(exclude_int_in_bonding([ports[0]], bonding)):
+                    type_int = ''
+                    if int in name_eoip:
+                        type_int = 'eoip'
+                    elif int in vlans:
+                        type_int = 'vlan'
+                    int_single_dict.update({int:type_int})
 
     return [br_empty, br_single, int_single_dict]
 
@@ -211,6 +212,9 @@ if __name__ == '__main__':
         file_active = argv[argv.index('-active') + 1]
     else:
         file_active = 'ip_ppp_active_from_cm.txt'
+
+    if '-out' in argv:
+        output_file = argv[argv.index('-out') + 1]
 
     if not os.path.exists(config_file):
         print(f'! Error: Конфигурационный файл "{config_file}" не указан или не существует.')

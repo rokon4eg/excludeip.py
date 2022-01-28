@@ -15,7 +15,7 @@ sections = dict([
                         ]),
     # [r'add\b(?:.+?)local-address=((?:\d+\.){3}\d+)(?:.+?)name=(.+?) remote-address=((?:\d+\.){3}\d+)']),
     ('interface_vlan', [r'add(?:.+)name=\"?(.+?)\"?(?: vlan-id|\n)',  # возвращает имя vlan
-                        r'add(?:.+)interface=\"?(.+?)\"?(?: name|\n|$)']),  # возвращает имя интерфейса
+                        r'add(?:.+)interface=\"?(.+?)\"?(?: [-\w]+=|\n|$)']),  # возвращает имя интерфейса
     ('interface_bridge_port', [r'add(?:.+)bridge=\"?(.+?)(?: (?:[-\w]+=)|\n|\"| inter).*face=\"?(.+?)\"?(?:\n|$)',
                                # возвращает bridge и interface
                                r'add(?:.+)interface=\"?(.+?)(?:\"[ \n]| [-\w]+=|\n|$)']),  # возвращает только interface
